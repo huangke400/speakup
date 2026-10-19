@@ -1,0 +1,17 @@
+{
+  "name": "SpeakUp · 英语口语陪练",
+  "short_name": "SpeakUp",
+  "description": "开口即练的英语口语陪练：说英文或中文，AI 永远用英文回答，每轮附一句更地道的说法。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1016",
+  "theme_color": "#0b1016",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

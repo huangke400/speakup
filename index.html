@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0b1016" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="SpeakUp" />
+<title>SpeakUp · 英语口语陪练</title>
+<link rel="manifest" href="./manifest.json" />
+<link rel="apple-touch-icon" href="./icon-180.png" />
+<link rel="icon" href="./icon-192.png" />
+<style>
+  :root{
+    --bg:#0b1016; --panel:#131b24; --panel2:#1a2431;
+    --line:#243040; --text:#e8eef6; --dim:#8b9bb0;
+    --accent:#3ddc97; --accent2:#4c9aff;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%}
+  body{
+    background:var(--bg);color:var(--text);
+    font:15px/1.55 ui-sans-serif,-apple-system,"Segoe UI",Roboto,"Helvetica Neue","PingFang SC","Microsoft YaHei",sans-serif;
+    overflow:hidden;
+  }
+  #app{display:flex;flex-direction:column;height:100dvh;max-width:860px;margin:0 auto;width:100%}
+  @media (min-width:900px){ #app{border-left:1px solid var(--line);border-right:1px solid var(--line)} }
+
+  header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--line);flex:none}
+  .brand{display:flex;align-items:baseline;gap:8px;font-weight:700;letter-spacing:.2px}
+  .brand small{color:var(--dim);font-weight:500;font-size:12px}
+  .hactions{display:flex;align-items:center;gap:8px}
+  .icon{background:var(--panel);border:1px solid var(--line);color:var(--dim);width:34px;height:34px;border-radius:10px;font-size:15px;cursor:pointer;display:grid;place-items:center}
+  .icon:hover{color:var(--text)}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;padding:10px 14px;border-bottom:1px solid var(--line);flex:none;scrollbar-width:none}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{white-space:nowrap;border:1px solid var(--line);background:transparent;color:var(--dim);padding:6px 12px;border-radius:999px;font-size:13px;cursor:pointer;transition:.15s}
+  .chip.on{background:rgba(61,220,151,.13);border-color:rgba(61,220,151,.5);color:var(--accent)}
+
+  #chat{flex:1;overflow-y:auto;padding:16px 14px 10px;display:flex;flex-direction:column;gap:14px;overscroll-behavior:contain}
+  #chat::-webkit-scrollbar{width:6px}
+  #chat::-webkit-scrollbar-thumb{background:var(--panel2);border-radius:3px}
+
+  .msg{display:flex;flex-direction:column;max-width:84%;animation:pop .18s ease-out}
+  @keyframes pop{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+  .msg.user{align-self:flex-end;align-items:flex-end}
+  .msg.ai{align-self:flex-start;align-items:flex-start}
+  .bubble{padding:10px 14px;border-radius:16px;font-size:15px;white-space:pre-wrap;word-break:break-word}
+  .msg.user .bubble{background:linear-gradient(160deg,#2f9e6f,#1f7a54);color:#fff;border-bottom-right-radius:6px}
+  .msg.ai .bubble{background:var(--panel);border:1px solid var(--line);border-bottom-left-radius:6px;cursor:pointer;transition:border-color .15s}
+  .msg.ai .bubble:hover{border-color:#33445a}
+  .msg.err .bubble{background:rgba(230,80,80,.1);border-color:rgba(230,80,80,.45);color:#ffc9c9;cursor:default}
+
+  .fix{margin-top:7px;padding:9px 12px;border-left:2px solid var(--accent2);background:rgba(76,154,255,.075);border-radius:0 12px 12px 0;font-size:13.5px;max-width:100%;animation:pop .2s ease-out}
+  .fixhead{display:flex;align-items:center;gap:6px;margin-bottom:3px}
+  .tag{font-size:10px;letter-spacing:.9px;text-transform:uppercase;color:var(--accent2);font-weight:700}
+  .icobtn{background:none;border:none;color:var(--dim);cursor:pointer;font-size:13px;padding:0 2px;line-height:1}
+  .icobtn:hover{color:var(--accent2)}
+  .better{color:#cfe0f5}
+  .zh{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line);color:#9fb0c4;font-size:13.5px;line-height:1.6;white-space:pre-wrap}
+  .zh[hidden]{display:none}
+  .note{margin-top:5px;color:var(--dim);font-size:12.5px}
+
+  .dots{display:none;gap:4px;padding:3px 0}
+  .dots i{width:6px;height:6px;border-radius:50%;background:var(--dim);animation:bounce 1.2s infinite}
+  .dots i:nth-child(2){animation-delay:.15s}
+  .dots i:nth-child(3){animation-delay:.3s}
+  @keyframes bounce{0%,80%,100%{opacity:.25;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+
+  .empty{margin:auto;text-align:center;padding:16px;max-width:430px}
+  .empty h2{font-size:19px;margin:0 0 6px}
+  .empty p{color:var(--dim);font-size:13.5px;margin:0 0 18px;line-height:1.7}
+  .starters{display:flex;flex-direction:column;gap:8px}
+  .starter{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:11px 13px;font-size:13.5px;text-align:left;color:var(--text);cursor:pointer;transition:.15s}
+  .starter:hover{border-color:rgba(61,220,151,.4)}
+  .starter span{color:var(--dim);display:block;font-size:12px;margin-top:2px}
+
+  #dock{padding:8px 14px calc(10px + env(safe-area-inset-bottom));border-top:1px solid var(--line);flex:none}
+  .composer{display:flex;gap:8px;align-items:center}
+  .composer input{flex:1;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:12px 14px;border-radius:12px;font-size:16px;outline:none;min-width:0}
+  .composer input:focus{border-color:rgba(61,220,151,.45)}
+  .composer input::placeholder{color:#5f7086}
+  #sendBtn{width:44px;height:44px;flex:none;border-radius:12px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:17px;cursor:pointer}
+  #sendBtn:active{transform:scale(.96)}
+
+  .microw{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:12px;position:relative}
+  #mic{width:66px;height:66px;border-radius:50%;border:none;font-size:26px;background:linear-gradient(160deg,#3ddc97,#22a06b);color:#06251a;cursor:pointer;box-shadow:0 6px 24px rgba(61,220,151,.26);transition:transform .12s}
+  #mic:active{transform:scale(.95)}
+  #mic.on{animation:pulse 1.4s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(61,220,151,.45)}70%{box-shadow:0 0 0 18px rgba(61,220,151,0)}100%{box-shadow:0 0 0 0 rgba(61,220,151,0)}}
+  .pill2{background:var(--panel);border:1px solid var(--line);color:var(--dim);border-radius:999px;padding:7px 12px;font-size:12.5px;cursor:pointer;min-width:58px}
+  .pill2:hover{color:var(--text)}
+  .seg{display:flex;background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:2px;gap:2px}
+  .seg button{border:none;background:transparent;color:var(--dim);font:11.5px/1 inherit;font-family:inherit;
+              padding:6px 7px;border-radius:999px;cursor:pointer;min-width:30px;transition:.15s}
+  .seg button:hover{color:var(--text)}
+  .seg button.on{background:rgba(61,220,151,.16);color:var(--accent);font-weight:600}
+  .hint{text-align:center;color:var(--dim);font-size:12px;margin-top:9px;min-height:17px;transition:color .15s;padding:0 10px;line-height:1.55;word-break:break-word}
+  .hint.live{color:var(--accent);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hint.warn{color:#ff9d8a}
+
+  .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+  .sheet[hidden]{display:none}
+  .sheetmask{position:absolute;inset:0;background:rgba(0,0,0,.6)}
+  .panel{position:relative;width:100%;max-width:520px;background:var(--panel);border:1px solid var(--line);border-radius:18px 18px 0 0;
+         padding:18px 18px calc(18px + env(safe-area-inset-bottom));max-height:88dvh;overflow-y:auto;animation:up .2s ease-out}
+  @keyframes up{from{transform:translateY(18px);opacity:.6}to{transform:none;opacity:1}}
+  @media(min-width:640px){ .sheet{align-items:center} .panel{border-radius:18px} }
+  .panelhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+  .panelhead h3{margin:0;font-size:16px}
+  .panel label{display:block;font-size:12.5px;color:var(--dim);margin-bottom:13px}
+  .panel input[type=text],.panel input[type=password],.panel select{
+    width:100%;margin-top:6px;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    padding:10px 12px;border-radius:10px;font-size:14px;outline:none;font-family:inherit}
+  .panel input:focus,.panel select:focus{border-color:rgba(61,220,151,.45)}
+  .notice{background:rgba(76,154,255,.1);border:1px solid rgba(76,154,255,.3);color:#bcd6ff;border-radius:10px;padding:9px 11px;font-size:12.5px;margin-bottom:14px;line-height:1.6}
+  .panelbtns{display:flex;gap:8px;margin-top:4px;flex-wrap:wrap}
+  .panelbtns button{flex:1;min-width:96px;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:var(--panel2);color:var(--text);font-size:13.5px;cursor:pointer;font-family:inherit}
+  .panelbtns button.primary{background:linear-gradient(160deg,#3ddc97,#22a06b);color:#06251a;border:none;font-weight:600}
+  .panelbtns button:active{transform:scale(.98)}
+  .tiny{font-size:11.5px;color:#5f7086;margin:12px 0 0;line-height:1.6}
+  .diag{margin:12px 0 0;padding:10px 12px;background:#0b1016;border:1px solid var(--line);border-radius:10px;
+        font:11.5px/1.75 ui-monospace,Consolas,"Courier New",monospace;color:var(--dim);
+        white-space:pre-wrap;word-break:break-word;max-height:34dvh;overflow-y:auto}
+  .kstatus{font-size:11.5px;color:#5f7086;margin:-4px 0 12px;line-height:1.6;word-break:break-all}
+  .kstatus b{color:var(--accent);font-weight:600}
+  .chk{display:flex;align-items:center;gap:8px;color:var(--text);font-size:13.5px !important}
+  .chk input{width:16px;height:16px;margin:0;accent-color:#3ddc97}
+
+  #toast{position:fixed;left:50%;bottom:calc(120px + env(safe-area-inset-bottom));transform:translateX(-50%) translateY(10px);
+         background:#22303f;color:#dfe9f5;padding:9px 14px;border-radius:10px;font-size:13px;opacity:0;pointer-events:none;
+         transition:.25s;z-index:80;max-width:86vw;text-align:center;box-shadow:0 8px 24px rgba(0,0,0,.4)}
+  #toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">🗣 SpeakUp<small>英语口语陪练</small></div>
+    <div class="hactions">
+      <button id="modeBtn" class="icon" style="width:auto;padding:0 12px;font-size:12.5px" title="文本显示语言">中英</button>
+      <button id="clearBtn" class="icon" title="开始新对话">＋</button>
+      <button id="gear" class="icon" title="设置">⚙</button>
+    </div>
+  </header>
+
+  <nav id="chips" class="chips"></nav>
+
+  <main id="chat"></main>
+
+  <div id="dock">
+    <div class="composer">
+      <input id="draft" type="text" placeholder="说英语，或在这里打字…" autocomplete="off" enterkeyhint="send" />
+      <button id="sendBtn" title="发送">↑</button>
+    </div>
+    <div class="microw">
+      <div class="seg" id="langSeg">
+        <button type="button" data-lang="auto" class="on">自动</button>
+        <button type="button" data-lang="en">EN</button>
+        <button type="button" data-lang="zh">中文</button>
+      </div>
+      <button id="mic" title="点击开始说话">🎤</button>
+      <button id="rateBtn" class="pill2" title="朗读语速">1.0×</button>
+    </div>
+    <div id="hint" class="hint">点击麦克风开始说 · 停一下自动发送 · 说中文请点「中文」</div>
+  </div>
+</div>
+
+<div id="sheet" class="sheet" hidden>
+  <div class="sheetmask" data-close></div>
+  <div class="panel">
+    <div class="panelhead">
+      <h3>设置</h3>
+      <button class="icon" data-close style="width:30px;height:30px">✕</button>
+    </div>
+    <div id="setupNotice" class="notice" hidden>
+      首次使用：请填入 DeepSeek API Key（在 platform.deepseek.com 创建）。Key 只保存在本机浏览器。
+    </div>
+    <div id="keyStatus" class="kstatus"></div>
+    <label>API Key
+      <input id="fKey" type="password" placeholder="sk-..." autocomplete="off" spellcheck="false" />
+    </label>
+    <label>接口地址
+      <input id="fBase" type="text" placeholder="https://api.deepseek.com" autocomplete="off" spellcheck="false" />
+    </label>
+    <label>模型
+      <input id="fModel" type="text" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" />
+    </label>
+    <label>朗读语速
+      <select id="fRate">
+        <option value="0.7">0.7×（慢，适合跟读）</option>
+        <option value="0.85">0.85×（偏慢）</option>
+        <option value="1">1.0×（正常）</option>
+        <option value="1.15">1.15×（偏快）</option>
+      </select>
+    </label>
+    <label>停顿多久算说完
+      <select id="fSilence">
+        <option value="1500">1.5 秒（反应快，容易抢话）</option>
+        <option value="3000">3 秒（推荐，够想词）</option>
+        <option value="4500">4.5 秒（慢节奏）</option>
+        <option value="7000">7 秒（慢慢说也打断不了）</option>
+        <option value="10000">10 秒（几乎不自动发，点麦克风手动发送）</option>
+      </select>
+    </label>
+    <label class="chk"><input id="fSpeak" type="checkbox" /> 自动朗读英文回复</label>
+    <div class="panelbtns">
+      <button id="testBtn">测试连接</button>
+      <button id="saveBtn" class="primary">保存</button>
+    </div>
+    <div class="panelbtns" style="margin-top:8px">
+      <button id="diagBtn">🎙 语音自检（识别不出来时先点这个）</button>
+    </div>
+    <pre id="diagOut" class="diag" hidden></pre>
+    <p class="tiny">接口地址需兼容 OpenAI 格式（DeepSeek / 其他中转均可）。Key 存在当前浏览器、当前网址下——换浏览器、或用不同地址（比如端口从 8788 变成 8789）打开，都要重新填一次。</p>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script type="module">
+/* ---------- 常量 ---------- */
+const LSK = { cfg:'speakup.v1.cfg', msgs:'speakup.v1.msgs' };
+const DEFAULTS = {
+  apiKey:'', baseUrl:'https://api.deepseek.com', model:'deepseek-chat',
+  rate:1, autoSpeak:true, showZh:true, silenceMs:3000, lang:'auto'
+};
+const SYS_BASE = `You are "Emma", a warm, patient native English speaker. The user is a Chinese learner practising SPOKEN English.
+
+OUTPUT FORMAT — follow exactly on every turn, no exceptions:
+
+<your English reply>
+
+[FIX]
+<a more natural English version of the user's LAST message, or NONE>
+
+[CN]
+<a short Chinese explanation of the main fix, under 25 characters, or NONE>
+
+[ZH]
+<a natural, faithful Chinese translation of your English reply>
+
+RULES:
+1. Your reply is ALWAYS in English. Never reply in Chinese, even when the user writes Chinese.
+2. Keep it short: 1-3 sentences, max 40 words. This is speech, not writing.
+3. Always end with one brief question so the conversation keeps going.
+4. Use simple, natural, spoken English with contractions. Match the user's level.
+5. No markdown, no bullet points, no emoji, no stage directions, no brackets other than the [FIX], [CN] and [ZH] tags.
+6. If the user writes Chinese or asks how to say something, understand it and answer naturally in English; put the English expression they asked for inside your reply.
+7. [FIX] must rewrite the user's last message the way a native speaker would actually say it. If it was already natural, write NONE. If the user spoke only Chinese, give the natural English sentence they meant.
+8. [CN] explains the key improvement briefly in Chinese. If there is nothing to explain, write NONE.
+9. [ZH] is a plain Chinese translation of your reply, sentence for sentence. No commentary, no English, no quotation marks. It is shown to the learner as a subtitle, never spoken.`;
+
+const SCENARIOS = [
+  { id:'free',      label:'自由闲聊', prompt:'' },
+  { id:'cafe',      label:'咖啡厅点单', prompt:'Scenario: You are a friendly barista in a busy city cafe. The learner is a customer ordering a drink. Ask naturally about size, milk options, and whether it is for here or to go.' },
+  { id:'interview', label:'求职面试', prompt:'Scenario: You are an HR interviewer at a foreign company. The learner is a job candidate. Ask one interview question at a time about their experience and motivation.' },
+  { id:'meeting',   label:'商务会议', prompt:'Scenario: You are a colleague in a business meeting. The learner is giving a brief project update. React naturally and ask a follow-up question or raise a mild objection.' },
+  { id:'travel',    label:'旅行出行', prompt:'Scenario: You are a hotel front-desk clerk. The learner is checking in. Handle questions about the booking, breakfast, and late checkout.' },
+  { id:'ielts',     label:'雅思口语', prompt:'Scenario: You are an IELTS speaking examiner (Part 1 and Part 3). Ask short, natural exam questions and nothing else.' }
+];
+
+/* ---------- 工具 ---------- */
+const $ = s => document.querySelector(s);
+const el = (t, c) => { const n = document.createElement(t); if (c) n.className = c; return n; };
+const chat = $('#chat'), hintEl = $('#hint'), draft = $('#draft');
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+let toastTimer = 0;
+function toast(msg, ms = 2600) {
+  const t = $('#toast');
+  t.textContent = msg; t.classList.add('on');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('on'), ms);
+}
+function setHint(text, live, warn) {
+  hintEl.textContent = text || '点击麦克风开始说 · 停一下自动发送 · 说中文请点「中文」';
+  hintEl.classList.toggle('live', !!live);
+  hintEl.classList.toggle('warn', !!warn);
+}
+function scrollBottom(force) {
+  const near = chat.scrollHeight - chat.scrollTop - chat.clientHeight < 160;
+  if (force || near) chat.scrollTop = chat.scrollHeight;
+}
+
+/* ---------- 状态 ---------- */
+const S = {
+  cfg: { ...DEFAULTS },
+  msgs: [],
+  busy: false,
+  listening: false,
+  rec: null,
+  lang: 'auto',      // auto | en | zh
+  scenario: 'free'
+};
+let abortCtrl = null;
+let recWatchTimer = null; // 停顿计时器，识别结束时必须清掉
+
+/* ---------- 配置持久化 ---------- */
+function loadCfg() {
+  try {
+    const raw = localStorage.getItem(LSK.cfg);
+    if (raw) S.cfg = { ...DEFAULTS, ...JSON.parse(raw) };
+  } catch (e) {}
+  try { localStorage.setItem(LSK.cfg, JSON.stringify(S.cfg)); } catch (e) {}
+}
+function saveCfg(patch) {
+  S.cfg = { ...S.cfg, ...patch };
+  try { localStorage.setItem(LSK.cfg, JSON.stringify(S.cfg)); } catch (e) {}
+}
+function persistMsgs() {
+  try {
+    const slim = S.msgs.slice(-60).map(m => ({ role:m.role, text:m.text, better:m.better||'', note:m.note||'', zh:m.zh||'' }));
+    localStorage.setItem(LSK.msgs, JSON.stringify(slim));
+  } catch (e) {}
+}
+function loadMsgs() {
+  try {
+    const raw = localStorage.getItem(LSK.msgs);
+    if (raw) S.msgs = JSON.parse(raw) || [];
+  } catch (e) { S.msgs = []; }
+}
+
+/* ---------- TTS ---------- */
+let VOICE = null;
+function loadVoice() {
+  const vs = window.speechSynthesis ? speechSynthesis.getVoices() : [];
+  const en = vs.filter(v => /^en([-_]|$)/i.test(v.lang));
+  if (!en.length) return;
+  const prefs = [/Google US English/i, /Samantha/i, /Microsoft Aria/i, /Microsoft Jenny/i,
+                 /Microsoft Zira/i, /Google UK English Female/i, /Karen/i, /Moira/i];
+  for (const p of prefs) { const f = en.find(v => p.test(v.name)); if (f) { VOICE = f; return; } }
+  VOICE = en.find(v => /en[-_]US/i.test(v.lang)) || en[0];
+}
+
+const tts = {
+  q: [], busy: false,
+  say(text, force) {
+    if (!text || !('speechSynthesis' in window)) return;
+    if (!force && !S.cfg.autoSpeak) return;
+    this.q.push(text); this.pump();
+  },
+  pump() {
+    if (this.busy || !this.q.length) return;
+    const text = this.q.shift();
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'en-US';
+    if (VOICE) u.voice = VOICE;
+    u.rate = Number(S.cfg.rate) || 1;
+    u.pitch = 1;
+    this.busy = true;
+    const done = () => { this.busy = false; this.pump(); };
+    u.onend = done; u.onerror = done;
+    try { speechSynthesis.speak(u); } catch (e) { done(); }
+  },
+  stop() {
+    this.q = []; this.busy = false;
+    try { speechSynthesis.cancel(); } catch (e) {}
+  }
+};
+
+let audioUnlocked = false;
+function unlockAudio() {
+  if (audioUnlocked) return;
+  audioUnlocked = true;
+  try {
+    const u = new SpeechSynthesisUtterance(' ');
+    u.volume = 0; speechSynthesis.speak(u);
+  } catch (e) {}
+}
+
+/* ---------- 输出解析 ---------- */
+const PARTIAL_TAG = /\[(?:F(?:I(?:X)?)?|C(?:N)?|Z(?:H)?)?\]?$/;
+function stripTail(s) { return s.replace(PARTIAL_TAG, '').trimEnd(); }
+
+function parseReply(raw) {
+  const iF = raw.indexOf('[FIX]');
+  if (iF === -1) return { reply: stripTail(raw.trim()), better: '', note: '', zh: '' };
+
+  const reply = raw.slice(0, iF).trim();
+  let rest = raw.slice(iF + 5);
+  let better = '', note = '', zh = '';
+
+  const iC = rest.indexOf('[CN]');
+  if (iC === -1) {
+    better = stripTail(rest.trim());
+  } else {
+    better = rest.slice(0, iC).trim();
+    rest = rest.slice(iC + 4);
+    const iZ = rest.indexOf('[ZH]');
+    if (iZ === -1) {
+      note = stripTail(rest.trim());
+    } else {
+      note = rest.slice(0, iZ).trim();
+      zh = rest.slice(iZ + 4).trim();
+    }
+  }
+  return { reply, better, note, zh };
+}
+const isNone = v => !v || /^none[.。]?$/i.test(v.trim());
+
+function takeSentences(text) {
+  const re = /[^.!?]+[.!?]+["')\]]?\s*/g;
+  const list = []; let last = 0, m;
+  while ((m = re.exec(text))) {
+    const s = m[0].trim();
+    if (s.length > 1) list.push(s);
+    last = re.lastIndex;
+  }
+  return { list, consumed: last };
+}
+
+/* ---------- 渲染 ---------- */
+function mount(m) {
+  const wrap = el('div', 'msg ' + (m.role === 'user' ? 'user' : 'ai'));
+  if (m.role === 'user') {
+    const b = el('div', 'bubble'); b.textContent = m.text;
+    wrap.appendChild(b);
+  } else {
+    const b = el('div', 'bubble');
+    const r = el('div', 'reply'); b.appendChild(r);
+    const z = el('div', 'zh'); z.hidden = true; b.appendChild(z);
+    const dots = el('div', 'dots'); dots.innerHTML = '<i></i><i></i><i></i>';
+    b.appendChild(dots);
+    b.title = '点击重听';
+    b.addEventListener('click', () => {
+      if (m.text && !m.errorText) { tts.stop(); unlockAudio(); tts.say(m.text, true); }
+    });
+
+    const fix = el('div', 'fix'); fix.hidden = true;
+    const fh = el('div', 'fixhead');
+    const tag = el('span', 'tag'); tag.textContent = 'Better';
+    const spk = el('button', 'icobtn'); spk.type = 'button'; spk.textContent = '🔊'; spk.title = '听地道说法';
+    spk.addEventListener('click', e => {
+      e.stopPropagation();
+      if (m.better && !isNone(m.better)) { unlockAudio(); tts.stop(); tts.say(m.better, true); }
+    });
+    fh.append(tag, spk);
+    const bt = el('div', 'better');
+    const nt = el('div', 'note');
+    fix.append(fh, bt, nt);
+
+    wrap.append(b, fix);
+    m._busyEl = b; m._reply = r; m._zh = z; m._dots = dots; m._fix = fix; m._better = bt; m._note = nt;
+  }
+  m._el = wrap;
+  chat.appendChild(wrap);
+  scrollBottom(true);
+  return wrap;
+}
+
+function paint(m) {
+  if (m.role !== 'assistant' || !m._reply) return;
+  m._reply.textContent = m.text || '';
+  m._dots.style.display = (m.streaming && !m.text) ? 'flex' : 'none';
+
+  // 正文的中文对照
+  const hasZh = !isNone(m.zh) && S.cfg.showZh;
+  m._zh.hidden = !hasZh;
+  if (hasZh) m._zh.textContent = m.zh;
+
+  // Better 框：地道说法 + 一句中文说明
+  const hasBetter = !isNone(m.better);
+  const hasNote = !isNone(m.note) && S.cfg.showZh;
+  m._fix.hidden = !(hasBetter || hasNote);
+  if (hasBetter) m._better.textContent = m.better;
+  m._note.hidden = !hasNote;
+  if (hasNote) m._note.textContent = m.note;
+  m._note.style.display = hasNote ? 'block' : 'none';
+  if (hasNote && hasBetter) m._note.style.marginTop = '5px';
+  scrollBottom(false);
+}
+
+function renderAll() {
+  chat.innerHTML = '';
+  if (!S.msgs.length) { renderEmpty(); return; }
+  S.msgs.forEach(m => mount(m));
+  scrollBottom(true);
+}
+
+function renderEmpty() {
+  const box = el('div', 'empty');
+  const h = el('h2'); h.textContent = 'Open your mouth, not your dictionary.';
+  const p = el('p');
+  p.textContent = '说英文或中文都行，AI 永远用英文回答。说完自动发送、自动朗读。每轮附一句更地道的说法。';
+  const list = el('div', 'starters');
+  const items = [
+    ['Hi! Let me tell you about my weekend.', '试试：描述你的一天'],
+    ["How do I say '我想请两天假' in English?", '试试：中文求助，英文回答'],
+    ["I'm preparing for an English job interview.", '试试：切换场景后直接开场']
+  ];
+  items.forEach(([text, tip]) => {
+    const b = el('button', 'starter');
+    b.textContent = text;
+    const s = el('span'); s.textContent = tip; b.appendChild(s);
+    b.addEventListener('click', () => send(text));
+    list.appendChild(b);
+  });
+  box.append(h, p, list);
+  chat.appendChild(box);
+}
+
+/* ---------- 顶栏与场景 ---------- */
+function renderChips() {
+  const box = $('#chips');
+  box.innerHTML = '';
+  SCENARIOS.forEach(sc => {
+    const b = el('button', 'chip' + (S.scenario === sc.id ? ' on' : ''));
+    b.textContent = sc.label;
+    b.addEventListener('click', () => {
+      S.scenario = sc.id;
+      renderChips();
+      toast('场景已切换：' + sc.label);
+    });
+    box.appendChild(b);
+  });
+}
+function buildSystem() {
+  const sc = SCENARIOS.find(x => x.id === S.scenario);
+  return SYS_BASE + (sc && sc.prompt ? '\n\n' + sc.prompt : '');
+}
+
+/* ---------- 语音识别 ---------- */
+function setMicListening(on) {
+  const m = $('#mic');
+  m.classList.toggle('on', on);
+  m.textContent = on ? '■' : '🎤';
+  m.title = on ? '点击停止' : '点击开始说话';
+}
+function refreshLangBtn() {
+  document.querySelectorAll('#langSeg button').forEach(b => {
+    b.classList.toggle('on', b.dataset.lang === S.lang);
+  });
+}
+function refreshRateBtn() { $('#rateBtn').textContent = (Number(S.cfg.rate) || 1).toFixed(2).replace(/0$/,'').replace(/\.$/,'.0') + '×'; }
+function refreshModeBtn() {
+  const b = $('#modeBtn');
+  b.textContent = S.cfg.showZh ? '中英' : 'EN';
+  b.title = S.cfg.showZh ? '当前：英文 + 中文对照，点击切换为纯英文' : '当前：纯英文，点击切换为中英对照';
+}
+
+function stopRec() {
+  clearInterval(recWatchTimer);
+  recWatchTimer = null;
+  try { S.rec && S.rec.stop(); } catch (e) {}
+}
+
+function startRec() {
+  if (!SR) {
+    setHint('此浏览器没有语音识别接口，请用 Chrome / Edge，或直接在下方打字', false, true);
+    return;
+  }
+  unlockAudio();
+  const useZh = S.lang === 'zh';
+  const lang = useZh ? 'zh-CN' : 'en-US';
+
+  // 停顿阈值：由我们自己计时，浏览器不再决定何时断句
+  const silenceMs = Number(S.cfg.silenceMs) || 2500;
+  const IDLE_MS = 15000;   // 一直没开口，自动放弃
+  const MAX_MS = 45000;    // 单次最长录音，防走神
+
+  const rec = new SR();
+  S.rec = rec;
+  rec.lang = lang;
+  rec.interimResults = true;
+  rec.continuous = true;   // 关键：不因一次短停就结束会话
+  rec.maxAlternatives = 1;
+
+  let finalText = '';
+  let interimText = '';
+  let processed = 0;        // 已确认的结果条数，防止重复累加
+  let errCode = '';
+  let heardSpeech = false;  // 是否真的检测到人声（用于判断是“没说话”还是“语言不对”）
+  let lastActivity = Date.now();
+  let lastSnapshot = '';
+  const startedAt = Date.now();
+  let closing = false;
+
+  S.listening = true;
+  setMicListening(true);
+  setHint(useZh ? '正在听中文…' : '正在听英文…', true);
+
+  const stopRecNow = () => {
+    if (closing) return;
+    closing = true;
+    clearInterval(watchTimer);
+    recWatchTimer = null;
+    try { rec.stop(); } catch (e) {}
+  };
+
+  // 每 150ms 检查一次：安静超过阈值就收工
+  const watchTimer = setInterval(() => {
+    const now = Date.now();
+    const hasText = !!(finalText.trim() || interimText.trim());
+    if (hasText && now - lastActivity >= silenceMs) return stopRecNow();
+    if (!hasText && now - startedAt >= IDLE_MS) return stopRecNow();
+    if (now - startedAt >= MAX_MS) return stopRecNow();
+  }, 150);
+  recWatchTimer = watchTimer;
+
+  rec.onstart = () => {
+    S.listening = true;
+    setMicListening(true);
+  };
+
+  rec.onresult = e => {
+    interimText = '';
+    for (let i = processed; i < e.results.length; i++) {
+      const r = e.results[i];
+      if (r.isFinal) { finalText += r[0].transcript; processed = i + 1; }
+      else interimText += r[0].transcript;
+    }
+    // 内容真的变了才算“有新动静”，避免浏览器重复推送同一句导致计时器永不超时
+    const snapshot = finalText + '|' + interimText;
+    if (snapshot !== lastSnapshot) {
+      lastSnapshot = snapshot;
+      lastActivity = Date.now();
+      const shown = (finalText + interimText).trim();
+      if (shown) setHint(shown, true);
+    }
+  };
+
+  // 检测到人声也重置计时，避免“说话中停顿”被误判
+  rec.onspeechstart = () => { heardSpeech = true; lastActivity = Date.now(); };
+  rec.onspeechend = () => { lastActivity = Date.now(); };
+
+  rec.onerror = e => { errCode = e.error || 'unknown'; };
+
+  rec.onend = () => {
+    closing = true;
+    clearInterval(watchTimer);
+    recWatchTimer = null;
+    S.listening = false;
+    setMicListening(false);
+
+    // 收尾：有的浏览器 stop() 后不再把最后一段 interim 转正，这里补上，避免吞掉半句
+    const text = (finalText + interimText).trim();
+    if (text) { setHint(''); send(text); return; }
+
+    const fail = msg => { setHint(msg, false, true); toast(msg, 5000); };
+    const cost = ((Date.now() - startedAt) / 1000).toFixed(1) + 's';
+
+    if (errCode === 'not-allowed' || errCode === 'service-not-allowed') {
+      fail('麦克风被拒绝：点地址栏的锁形图标 → 站点设置 → 麦克风 → 允许，然后刷新页面');
+    } else if (errCode === 'audio-capture') {
+      fail('没有检测到麦克风设备，检查系统声音设置里的输入设备');
+    } else if (errCode === 'network') {
+      fail('连不上语音服务（' + cost + '）：Chrome 的识别需要连 Google 服务器，国内网络通常不通。改用 Edge 试，或直接打字');
+    } else if (errCode === 'aborted') {
+      setHint('');
+    } else if (errCode && errCode !== 'no-speech') {
+      fail('识别失败：' + errCode);
+    } else if (S.lang === 'auto' && heardSpeech) {
+      // 自动模式下听到了人声却一个字没出来 —— 基本就是语言选错了（说的是中文）
+      S.lang = 'zh';
+      refreshLangBtn();
+      setHint('没识别到英文，已自动切到「中文」识别，再说一次；说完可点「自动」切回', false, true);
+      toast('没识别到英文，已切到中文识别', 4200);
+    } else {
+      setHint('没有听到声音，靠近麦克风再说一次；若一直无反应，去设置里点「语音自检」', false, true);
+    }
+  };
+
+  try { rec.start(); }
+  catch (e) {
+    closing = true;
+    clearInterval(watchTimer);
+    recWatchTimer = null;
+    S.listening = false;
+    setMicListening(false);
+    setHint('启动失败：' + e.message, false, true);
+  }
+}
+
+/* ---------- 语音自检 ---------- */
+async function runDiag() {
+  const box = $('#diagOut');
+  box.hidden = false;
+  box.textContent = '';
+  const L = s => { box.textContent += s + '\n'; };
+
+  L('安全上下文  ' + (window.isSecureContext ? 'OK' : '否（必须 https 或 localhost）'));
+  const ua = navigator.userAgent;
+  L('浏览器      ' + ((ua.match(/Edg\/[\d.]+/) || ua.match(/Chrome\/[\d.]+/) ||
+                       ua.match(/Firefox\/[\d.]+/) || ua.match(/Safari\/[\d.]+/) || ['未知'])[0]));
+  L('识别接口    ' + (SR ? 'OK' : '无 —— 该浏览器不支持，只能用键盘输入'));
+
+  if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+    try {
+      const st = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const tr = st.getAudioTracks()[0];
+      L('麦克风      ' + (tr ? ('OK ' + (tr.label || '（未命名设备）')) : '无音轨'));
+      st.getTracks().forEach(t => t.stop());
+    } catch (e) {
+      L('麦克风      失败 ' + (e.name || e.message));
+    }
+  } else {
+    L('麦克风      接口不可用');
+  }
+
+  if ('speechSynthesis' in window) {
+    const en = (speechSynthesis.getVoices() || []).filter(v => /^en/i.test(v.lang));
+    L('朗读音色    ' + en.length + ' 个英文' + (en.length ? '（' + en[0].name + '）' : ' —— 可能没有英文音色'));
+  } else {
+    L('朗读音色    不支持');
+  }
+
+  if (!SR) return;
+
+  L('');
+  L('--- 现在请说一句话（英文），最多等 12 秒 ---');
+  const r = new SR();
+  r.lang = 'en-US';
+  r.interimResults = true;
+  r.continuous = false;
+  r.maxAlternatives = 1;
+
+  const t0 = Date.now();
+  let stage = 'created';
+  let got = '';
+
+  await new Promise(resolve => {
+    let done = false;
+    const end = msg => {
+      if (done) return;
+      done = true;
+      clearTimeout(timer);
+      try { r.stop(); } catch (e) {}
+      L(msg);
+      resolve();
+    };
+    const timer = setTimeout(() => end('结果        超时无响应（阶段 ' + stage + '）'), 12000);
+
+    r.onstart = () => { stage = 'started 已启动'; };
+    r.onaudiostart = () => { stage = 'audio 已采到声音'; };
+    r.onspeechstart = () => { stage = 'speech 检测到人声'; };
+    r.onresult = e => {
+      for (let i = 0; i < e.results.length; i++) got += e.results[i][0].transcript;
+    };
+    r.onerror = e => end('结果        错误 ' + e.error + '（' + (Date.now() - t0) + 'ms）');
+    r.onend = () => end(got
+      ? '结果        成功：' + got.trim()
+      : '结果        无内容（阶段 ' + stage + '，' + (Date.now() - t0) + 'ms）');
+
+    try { r.start(); } catch (e) { end('结果        启动失败 ' + e.message); }
+  });
+
+  L('');
+  L('--- 自检结束 ---');
+}
+
+function onMic() {
+  if (S.listening) { stopRec(); return; }
+  if (S.busy) { try { abortCtrl && abortCtrl.abort(); } catch (e) {} }
+  tts.stop();
+  if (!S.cfg.apiKey) { openSheet(true); return; }
+  startRec();
+}
+
+/* ---------- 大模型流式调用 ---------- */
+async function callLLM(messages, onDelta, signal) {
+  const base = (S.cfg.baseUrl || DEFAULTS.baseUrl).replace(/\/+$/, '');
+  const res = await fetch(base + '/chat/completions', {
+    method: 'POST',
+    signal,
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + S.cfg.apiKey
+    },
+    body: JSON.stringify({
+      model: S.cfg.model || DEFAULTS.model,
+      stream: true,
+      temperature: 0.7,
+      max_tokens: 420,
+      messages
+    })
+  });
+
+  if (!res.ok) {
+    let detail = '';
+    try { detail = (await res.text()).slice(0, 260); } catch (e) {}
+    throw new Error('接口返回 ' + res.status + (detail ? '：' + detail : ''));
+  }
+  if (!res.body) throw new Error('当前环境不支持流式响应');
+
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop() || '';
+    for (const line of lines) {
+      const s = line.trim();
+      if (!s.startsWith('data:')) continue;
+      const payload = s.slice(5).trim();
+      if (payload === '[DONE]') return;
+      try {
+        const j = JSON.parse(payload);
+        const c = j.choices && j.choices[0] && j.choices[0].delta && j.choices[0].delta.content;
+        if (c) onDelta(c);
+      } catch (e) { /* 忽略不完整分片 */ }
+    }
+  }
+}
+
+/* ---------- 发送 ---------- */
+let pendingText = null; // 上一轮未结束时收到的输入，等结束后自动补发
+
+async function send(rawText) {
+  const text = (rawText || '').trim();
+  if (!text) return;
+  if (S.busy) { pendingText = text; return; }
+  if (!S.cfg.apiKey) { openSheet(true); toast('请先填写 API Key'); return; }
+
+  tts.stop();
+  if (chat.querySelector('.empty')) chat.innerHTML = '';
+  S.busy = true;
+  $('#mic').style.opacity = '.55';
+
+  const um = { role:'user', text };
+  S.msgs.push(um); mount(um);
+
+  const ai = { role:'assistant', text:'', better:'', note:'', streaming:true };
+  S.msgs.push(ai); mount(ai);
+  paint(ai);
+
+  const history = S.msgs
+    .filter(m => (m.role === 'user' && m.text) || (m.role === 'assistant' && m.text))
+    .slice(-16)
+    .map(m => ({ role: m.role, content: m.text }));
+
+  let raw = '';
+  let spoken = 0;
+  abortCtrl = new AbortController();
+
+  try {
+    await callLLM(
+      [{ role:'system', content: buildSystem() }, ...history],
+      delta => {
+        raw += delta;
+        const p = parseReply(raw);
+        ai.text = p.reply; ai.better = p.better; ai.note = p.note; ai.zh = p.zh;
+        paint(ai);
+
+        // 边生成边按句朗读，降低首句延迟
+        if (S.cfg.autoSpeak && ai.text.length > spoken) {
+          const seg = ai.text.slice(spoken);
+          const { list, consumed } = takeSentences(seg);
+          list.forEach(s => tts.say(s));
+          spoken += consumed;
+        }
+      },
+      abortCtrl.signal
+    );
+
+    ai.streaming = false;
+    paint(ai);
+
+    const tail = (ai.text || '').slice(spoken).trim();
+    if (tail) tts.say(tail);
+
+    if (!ai.text) { ai.text = '(没有返回内容，请重试)'; paint(ai); }
+
+  } catch (err) {
+    ai.streaming = false;
+    if (err && err.name === 'AbortError') {
+      if (!ai.text) { ai._el && ai._el.remove(); S.msgs = S.msgs.filter(x => x !== ai); }
+      else paint(ai);
+    } else {
+      const msg = err && err.message ? err.message : String(err);
+      ai.errorText = msg;
+      ai.text = '请求失败：' + msg;
+      if (ai._el) ai._el.classList.add('err');
+      paint(ai);
+      if (/401|403/.test(msg)) toast('API Key 无效或已过期');
+    }
+  } finally {
+    S.busy = false;
+    abortCtrl = null;
+    $('#mic').style.opacity = '';
+    persistMsgs();
+    scrollBottom(false);
+    if (pendingText) { const p = pendingText; pendingText = null; send(p); }
+  }
+}
+
+/* ---------- 设置面板 ---------- */
+function refreshKeyStatus() {
+  const box = $('#keyStatus');
+  if (!box) return;
+  const k = S.cfg.apiKey || '';
+  const host = location.host || '本机';
+  box.innerHTML = k
+    ? '当前地址 <b>' + host + '</b> · Key 已保存（****' + k.slice(-4) + '）'
+    : '当前地址 <b>' + host + '</b> · <b>尚未填写 Key</b>';
+}
+
+function openSheet(isFirst) {
+  const sh = $('#sheet');
+  sh.hidden = false;
+  $('#setupNotice').hidden = !isFirst;
+  $('#fKey').value = S.cfg.apiKey || '';
+  $('#fBase').value = S.cfg.baseUrl || DEFAULTS.baseUrl;
+  $('#fModel').value = S.cfg.model || DEFAULTS.model;
+  $('#fRate').value = String(S.cfg.rate || 1);
+  const sel = $('#fSilence');
+  const want = String(S.cfg.silenceMs || DEFAULTS.silenceMs);
+  sel.value = Array.from(sel.options).some(o => o.value === want) ? want : String(DEFAULTS.silenceMs);
+  $('#fSpeak').checked = !!S.cfg.autoSpeak;
+  refreshKeyStatus();
+}
+
+// 统一落盘：只要 Key 非空就保存，其余参数一并写入
+function persistSheet() {
+  const key = $('#fKey').value.trim();
+  if (!key) return false;
+  saveCfg({
+    apiKey: key,
+    baseUrl: $('#fBase').value.trim() || DEFAULTS.baseUrl,
+    model: $('#fModel').value.trim() || DEFAULTS.model,
+    rate: Number($('#fRate').value) || 1,
+    silenceMs: Number($('#fSilence').value) || DEFAULTS.silenceMs,
+    autoSpeak: $('#fSpeak').checked
+  });
+  refreshRateBtn();
+  refreshKeyStatus();
+  return true;
+}
+
+// 点遮罩、点 ✕、按 Esc 都算“关掉面板”，关之前先把填好的内容存下来，
+// 避免用户以为填了就生效、结果下次打开又要重填
+function closeSheet() {
+  const before = S.cfg.apiKey;
+  const saved = persistSheet();
+  $('#sheet').hidden = true;
+  if (saved && before !== S.cfg.apiKey) toast('Key 已保存');
+}
+
+function saveSheet() {
+  if (!persistSheet()) { toast('请填写 API Key'); return; }
+  $('#sheet').hidden = true;
+  toast('已保存');
+}
+
+// 输入即保存（防抖），不必非得点“保存”
+let keySaveTimer = 0;
+$('#fKey').addEventListener('input', () => {
+  clearTimeout(keySaveTimer);
+  keySaveTimer = setTimeout(() => { if (persistSheet()) toast('已自动保存', 1400); }, 800);
+});
+
+async function testConn() {
+  const key = $('#fKey').value.trim();
+  if (!key) { toast('请先填写 API Key'); return; }
+  const btn = $('#testBtn');
+  btn.disabled = true; btn.textContent = '测试中…';
+  try {
+    const base = ($('#fBase').value.trim() || DEFAULTS.baseUrl).replace(/\/+$/, '');
+    const res = await fetch(base + '/chat/completions', {
+      method:'POST',
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer ' + key },
+      body: JSON.stringify({
+        model: $('#fModel').value.trim() || DEFAULTS.model,
+        messages: [{ role:'user', content: 'ping' }],
+        max_tokens: 1, stream: false
+      })
+    });
+    if (!res.ok) {
+      const t = (await res.text()).slice(0, 160);
+      toast('失败 ' + res.status + '：' + t, 4200);
+    } else {
+      toast('连接正常 ✓');
+    }
+  } catch (e) {
+    toast('连接失败：' + e.message, 4000);
+  } finally {
+    btn.disabled = false; btn.textContent = '测试连接';
+  }
+}
+
+/* ---------- 事件绑定 ---------- */
+function sendDraft() { const v = draft.value; draft.value = ''; send(v); }
+
+$('#mic').addEventListener('click', onMic);
+$('#sendBtn').addEventListener('click', sendDraft);
+draft.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); sendDraft(); }
+});
+
+document.querySelectorAll('#langSeg button').forEach(b => {
+  b.addEventListener('click', () => {
+    S.lang = b.dataset.lang;
+    saveCfg({ lang: S.lang });   // 记住手动选择，下次打开不用再点
+    refreshLangBtn();
+    toast(S.lang === 'auto' ? '识别语言：自动（默认英文，识别不到会自动切中文）'
+        : S.lang === 'en' ? '识别语言：英语'
+        : '识别语言：中文 —— 你说中文，AI 仍然用英文回答');
+  });
+});
+
+$('#rateBtn').addEventListener('click', () => {
+  const steps = [0.7, 0.85, 1, 1.15];
+  const i = steps.indexOf(Number(S.cfg.rate));
+  const next = steps[(i + 1) % steps.length];
+  saveCfg({ rate: next });
+  refreshRateBtn();
+  unlockAudio();
+  tts.say('This is the speaking speed.', true);
+});
+
+$('#modeBtn').addEventListener('click', () => {
+  saveCfg({ showZh: !S.cfg.showZh });
+  refreshModeBtn();
+  S.msgs.filter(m => m.role === 'assistant').forEach(paint);
+  toast(S.cfg.showZh ? '文本：英文 + 中文对照' : '文本：纯英文');
+});
+
+$('#clearBtn').addEventListener('click', () => {
+  if (!S.msgs.length && chat.querySelector('.empty')) { toast('已经是新对话'); return; }
+  S.msgs = [];
+  persistMsgs();
+  tts.stop();
+  renderAll();
+  toast('已开始新对话');
+});
+
+$('#gear').addEventListener('click', () => openSheet(false));
+document.querySelectorAll('[data-close]').forEach(n => n.addEventListener('click', closeSheet));
+$('#saveBtn').addEventListener('click', saveSheet);
+$('#testBtn').addEventListener('click', testConn);
+$('#diagBtn').addEventListener('click', runDiag);
+
+/* ---------- 启动 ---------- */
+function boot() {
+  loadCfg();
+  loadMsgs();
+  S.lang = S.cfg.lang || 'auto';
+  renderChips();
+  refreshLangBtn();
+  refreshModeBtn();
+  refreshRateBtn();
+  setHint('');
+  renderAll();
+
+  if (!SR) toast('当前浏览器不支持语音识别，可先用键盘输入（推荐 Chrome / Edge）', 4200);
+  if (!('speechSynthesis' in window)) toast('当前浏览器不支持语音朗读', 3600);
+  if (!S.cfg.apiKey) setTimeout(() => openSheet(true), 320);
+
+  // 语音列表异步加载
+  if ('speechSynthesis' in window) {
+    loadVoice();
+    speechSynthesis.onvoiceschanged = loadVoice;
+  }
+
+  // PWA
+  if ('serviceWorker' in navigator && location.protocol !== 'file:') {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+}
+boot();
+
+// 桌面端快捷键：空格按住说话在输入框内会冲突，这里只做 Esc 停止朗读
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { tts.stop(); stopRec(); }
+});
+</script>
+</body>
+</html>
