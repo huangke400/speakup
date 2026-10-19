@@ -1,6 +1,6 @@
 /* SpeakUp Service Worker
    仅缓存本应用的静态外壳；对第三方接口（DeepSeek 等）一律直连，不缓存、不拦截。 */
-const CACHE = 'speakup-v7';
+const CACHE = 'speakup-v8';
 const ASSETS = [
   './',
   './index.html',

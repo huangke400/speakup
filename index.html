@@ -371,6 +371,11 @@ function unlockAudio() {
     u.volume = 0; speechSynthesis.speak(u);
   } catch (e) {}
 }
+// 安卓上 speechSynthesis 要求用户先与页面交互过。这里在任意第一次触摸/点击/按键时解锁——
+// 不能只在麦克风按钮上解锁，用输入法语音输入的人根本不会点到那个按钮
+['pointerdown', 'touchstart', 'keydown'].forEach(ev => {
+  document.addEventListener(ev, unlockAudio, { once: true, passive: true });
+});
 
 /* ---------- 输出解析 ---------- */
 const PARTIAL_TAG = /\[(?:F(?:I(?:X)?)?|C(?:N)?|Z(?:H)?)?\]?$/;
@@ -702,10 +707,31 @@ async function runDiag() {
   }
 
   if ('speechSynthesis' in window) {
-    const en = (speechSynthesis.getVoices() || []).filter(v => /^en/i.test(v.lang));
-    L('朗读音色    ' + en.length + ' 个英文' + (en.length ? '（' + en[0].name + '）' : ' —— 可能没有英文音色'));
+    const all = speechSynthesis.getVoices() || [];
+    const en = all.filter(v => /^en/i.test(v.lang));
+    L('音色总数    ' + all.length + (all.length ? '（' + all.slice(0, 3).map(v => v.lang).join(', ') + '）' : ' —— 系统没有装语音引擎'));
+    L('英文音色    ' + en.length + (en.length ? '（' + en[0].name + '）' : ' —— 没有英文发音，中文引擎读英文会很难听或不出声'));
+
+    // 真的读一句，看引擎会不会有反应
+    L('');
+    L('--- 正在试读一句英文，注意听 ---');
+    unlockAudio();
+    const spoken = await new Promise(resolve => {
+      let started = false;
+      const u = new SpeechSynthesisUtterance('This is a voice test.');
+      u.lang = 'en-US';
+      if (VOICE) u.voice = VOICE;
+      const timer = setTimeout(() => {
+        resolve(started ? '有反应但没读完（可能引擎卡住）' : '完全无响应 —— 系统没有可用的语音引擎');
+      }, 6000);
+      u.onstart = () => { started = true; };
+      u.onend = () => { clearTimeout(timer); resolve('正常'); };
+      u.onerror = e => { clearTimeout(timer); resolve('报错 ' + (e.error || 'unknown')); };
+      try { speechSynthesis.speak(u); } catch (e) { clearTimeout(timer); resolve('异常 ' + e.message); }
+    });
+    L('朗读实测    ' + spoken);
   } else {
-    L('朗读音色    不支持');
+    L('音色总数    该浏览器不支持语音合成');
   }
 
   if (!SR) return;
@@ -820,6 +846,7 @@ async function send(rawText) {
   if (!S.cfg.apiKey) { openSheet(true); toast('请先填写 API Key'); return; }
 
   tts.stop();
+  unlockAudio();
   if (chat.querySelector('.empty')) chat.innerHTML = '';
   S.busy = true;
   $('#mic').style.opacity = '.55';
